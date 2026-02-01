@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Superhero Game</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
@@ -13,7 +14,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background-color: #3b2f2f; /* Dark brown */
+      background-color: #3b2f2f;
       color: #fff;
       font-family: 'Orbitron', sans-serif;
       overflow: hidden;
@@ -27,10 +28,11 @@
     }
 
     img {
-      width: 600px; /* Bigger image */
+      width: 600px;
       height: 600px;
       margin-bottom: 20px;
       transition: transform 0.3s ease;
+      object-fit: contain;
     }
 
     img:hover {
@@ -57,9 +59,20 @@
     }
 
     button:disabled {
-      background-color: #555;
+      background: #2a2a2a; 
       cursor: not-allowed;
       box-shadow: none;
+      color: #555;
+      transform: none;
+      border: 1px solid #444;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      text-align: center;
     }
 
     #status {
@@ -74,12 +87,48 @@
       font-size: 26px;
       color: #00ff00;
       display: none;
-      text-align: center;
+      text-align: left;
       animation: fadeIn 1s ease-in-out;
+      width: 80%;
     }
 
-    #attackButtons {
-      margin-top: 20px;
+    #distanceDisplay {
+      margin-bottom: 20px;
+    }
+
+    #lanes {
+      display: flex;
+      justify-content: space-around;
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+
+    .lane {
+      position: relative;
+      width: 60px;
+      height: 100%;
+      border-left: 2px solid #fff;
+      border-right: 2px solid #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #00ff00;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: top 0.2s;
+    }
+
+    .attackBtnContainer {
+      margin-top: auto;
+      margin-bottom: 10px;
     }
 
     @keyframes fadeIn {
@@ -95,97 +144,124 @@
 </head>
 <body>
   <div id="menu">
-    <img src="TitleImage.webp" alt="Superhero" id="centerImage">
-    <button id="startBtn" disabled>START</button>
-    <div id="status">Waiting for player 1...</div>
+    <img src="TitleImage.webp" alt="Superhero" id="centerImage" onerror="this.style.display='none'">
+    <input type="text" id="codeInput" placeholder="Enter 3-digit code">
+    <button id="startBtn">START</button>
+    <div id="status">Enter code and press START</div>
   </div>
 
   <div id="gameData">
     <div id="distanceDisplay">Distance: 0.0</div>
-    <div id="laneDisplay">Lane: 1</div>
-    <div id="attackButtons">
-      <button data-lane="1">Attack Lane 1</button>
-      <button data-lane="2">Attack Lane 2</button>
-      <button data-lane="3">Attack Lane 3</button>
+    <div id="lanes">
+      <div class="lane" data-lane="1">
+        <div class="hero" id="hero1"></div>
+        <div class="attackBtnContainer"><button data-lane="1">Attack</button></div>
+      </div>
+      <div class="lane" data-lane="2">
+        <div class="hero" id="hero2"></div>
+        <div class="attackBtnContainer"><button data-lane="2">Attack</button></div>
+      </div>
+      <div class="lane" data-lane="3">
+        <div class="hero" id="hero3"></div>
+        <div class="attackBtnContainer"><button data-lane="3">Attack</button></div>
+      </div>
     </div>
   </div>
 
   <script>
     const startBtn = document.getElementById('startBtn');
+    const codeInput = document.getElementById('codeInput');
     const status = document.getElementById('status');
     const menu = document.getElementById('menu');
     const gameData = document.getElementById('gameData');
     const distanceDisplay = document.getElementById('distanceDisplay');
-    const laneDisplay = document.getElementById('laneDisplay');
-    const attackButtonsDiv = document.getElementById('attackButtons');
-    const attackButtons = attackButtonsDiv.querySelectorAll('button');
+    const heroes = [document.getElementById('hero1'), document.getElementById('hero2'), document.getElementById('hero3')];
+    const attackButtons = document.querySelectorAll('.attackBtnContainer button');
 
-    const ws = new WebSocket("wss://kamenherodash-server-production.up.railway.app");
-
+    let ws;
     let gameStarted = false;
-
-    ws.addEventListener('open', () => {
-      console.log('Connected to server');
-      ws.send(JSON.stringify({ type: "join", player: 2 }));
-    });
-
-    ws.addEventListener('message', (event) => {
-      const msg = JSON.parse(event.data);
-      console.log('Received:', msg);
-
-      if (msg.type === 'start') {
-        gameStarted = true;
-        status.textContent = '';
-        startBtn.disabled = false;
-      }
-
-      if (msg.type === 'role') {
-        console.log('You are player', msg.player);
-      }
-
-      if (msg.type === 'distance') {
-        if (gameStarted) {
-          const distance = parseFloat(msg.value).toFixed(1);
-          distanceDisplay.textContent = `Distance: ${distance}`;
-          if (msg.lane !== undefined) {
-            const lane = Math.min(Math.max(parseInt(msg.lane), 1), 3);
-            laneDisplay.textContent = `Lane: ${lane}`;
-          }
-        }
-      }
-
-      if (msg.type === 'result') {
-        if (msg.outcome === 'victory') {
-          alert('You lose');
-        } else if (msg.outcome === 'fail') {
-          alert('You won');
-        }
-      }
-    });
-
-    ws.addEventListener('close', () => {
-      console.log('Connection closed');
-      status.textContent = 'Disconnected from server';
-      startBtn.disabled = true;
-    });
+    let initialDistance = 10; // default, will get from player 1
 
     startBtn.addEventListener('click', () => {
-      menu.style.display = 'none';
-      gameData.style.display = 'block';
+      const code = codeInput.value.trim();
+      if (!/^[0-9]{3}$/.test(code)) {
+        status.textContent = 'Please enter a valid 3-digit code';
+        return;
+      }
+      status.textContent = 'Connecting...';
+      startBtn.disabled = true;
+      codeInput.disabled = true;
+
+      ws = new WebSocket("wss://kamenherodash-server-production.up.railway.app");
+
+      ws.addEventListener('open', () => {
+        console.log('Connected to server');
+        ws.send(JSON.stringify({ type: 'join', player: 2 }));
+        ws.send(JSON.stringify({ type: 'code', value: parseInt(code) }));
+      });
+
+      ws.addEventListener('message', (event) => {
+        const msg = JSON.parse(event.data);
+        console.log('Received:', msg);
+
+        if (msg.type === 'role') {
+          status.textContent = 'Connected as Player ' + msg.player;
+        }
+
+        if (msg.type === 'start') {
+          gameStarted = true;
+          menu.style.display = 'none';
+          gameData.style.display = 'block';
+        }
+
+        if (msg.type === 'error') {
+          status.textContent = msg.message;
+          startBtn.disabled = false;
+          codeInput.disabled = false;
+          ws.close();
+        }
+
+        if (msg.type === 'distance' && gameStarted) {
+          const distance = parseFloat(msg.value);
+          distanceDisplay.textContent = `Distance: ${distance.toFixed(1)}`;
+
+          if(msg.initialDistance) initialDistance = msg.initialDistance;
+
+          if(msg.lane !== undefined && msg.lane >=1 && msg.lane <=3){
+            const laneIndex = msg.lane - 1;
+            const laneHeight = heroes[laneIndex].parentElement.clientHeight - heroes[laneIndex].clientHeight - 50; // 50px margin for button
+            const topPos = (distance / initialDistance) * laneHeight;
+            heroes[laneIndex].style.top = `${topPos}px`;
+          }
+        }
+
+        if (msg.type === 'result') {
+          alert(msg.outcome === 'victory' ? 'You lose' : 'You won');
+        }
+      });
+
+      ws.addEventListener('close', () => {
+        console.log('Connection closed');
+        if (!gameStarted) {
+          status.textContent = 'Disconnected from server';
+          startBtn.disabled = false;
+          codeInput.disabled = false;
+        }
+      });
     });
 
-    function disableAttackButtonsTemporarily() {
+    function disableAllAttackButtonsTemporarily() {
       attackButtons.forEach(btn => btn.disabled = true);
-      setTimeout(() => {
-        attackButtons.forEach(btn => btn.disabled = false);
-      }, 3000);
+      setTimeout(() => attackButtons.forEach(btn => btn.disabled = false), 1000);
     }
 
     attackButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const lane = parseInt(btn.getAttribute('data-lane'));
-        ws.send(JSON.stringify({ type: 'attack', lane: lane }));
-        disableAttackButtonsTemporarily();
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'attack', lane: lane }));
+          disableAllAttackButtonsTemporarily();
+        }
       });
     });
   </script>
