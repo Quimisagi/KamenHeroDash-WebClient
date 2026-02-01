@@ -2,18 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Game</title>
-  <script>
-    // When the page loads, immediately open the Player 2 client
-    window.addEventListener('load', () => {
-      window.open('title.html', '_self'); // Opens the Player 2 client
-      // Later you can open another page if needed:
-      // setTimeout(() => window.open('anotherpage.html', '_blank'), 2000);
-    });
-  </script>
+  <title>title</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    #menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    img {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #ffcc00;
+    }
+
+    #gameMessage {
+      font-size: 24px;
+      color: #00ff00;
+      display: none; /* hidden by default */
+    }
+  </style>
 </head>
 <body>
-  <!-- Empty page: no UI, nothing visible -->
+  <div id="menu">
+    <img src="your-image.png" alt="Center Image" id="centerImage">
+    <button id="startBtn" disabled>START</button>
+    <div id="status">Waiting for player 1...</div>
+  </div>
+
+  <div id="gameMessage">Game started!</div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const status = document.getElementById('status');
+    const menu = document.getElementById('menu');
+    const gameMessage = document.getElementById('gameMessage');
+
+    const ws = new WebSocket("wss://kamenherodash-server-production.up.railway.app");
+
+    let gameStarted = false;
+
+    ws.addEventListener('open', () => {
+      console.log('Connected to server');
+
+      // Send join message as player 2
+      ws.send(JSON.stringify({
+        type: "join",
+        player: 2
+      }));
+    });
+
+    ws.addEventListener('message', (event) => {
+      const msg = JSON.parse(event.data);
+      console.log('Received:', msg);
+
+      if (msg.type === 'start') {
+        gameStarted = true;
+        status.textContent = '';
+        startBtn.disabled = false;
+      }
+
+      if (msg.type === 'role') {
+        console.log('You are player', msg.player);
+      }
+    });
+
+    ws.addEventListener('close', () => {
+      console.log('Connection closed');
+      status.textContent = 'Disconnected from server';
+      startBtn.disabled = true;
+    });
+
+    startBtn.addEventListener('click', () => {
+      // Hide the menu
+      menu.style.display = 'none';
+      // Show the game message
+      gameMessage.style.display = 'block';
+      console.log('Game started!');
+    });
+  </script>
 </body>
 </html>
 
