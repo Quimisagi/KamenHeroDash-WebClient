@@ -1,270 +1,360 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Superhero Game</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superhero Game - Battle Client</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
 
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background-color: #3b2f2f;
-      color: #fff;
-      font-family: 'Orbitron', sans-serif;
-      overflow: hidden;
-    }
+        :root {
+            --primary-accent: #ff6f61;
+            --secondary-accent: #ffcc00;
+            --bg-dark: #1a1a1a;
+            --lane-color: rgba(255, 255, 255, 0.2);
+            --hero-color: #00ff00;
+        }
 
-    #menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: fadeIn 1s ease-in-out;
-    }
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #2b1f1f;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+        }
 
-    img {
-      width: 600px;
-      height: 600px;
-      margin-bottom: 20px;
-      transition: transform 0.3s ease;
-      object-fit: contain;
-    }
+        /* Menu Styles */
+        #menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s ease-out;
+            padding: 20px;
+            text-align: center;
+        }
 
-    img:hover {
-      transform: scale(1.1) rotate(5deg);
-    }
+        #centerImage {
+            width: 500px;
+            height: 500px;
+            max-width: 80vw;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 111, 97, 0.5));
+        }
 
-    button {
-      padding: 12px 25px;
-      font-size: 20px;
-      cursor: pointer;
-      margin: 8px;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #ff6f61, #ffcc00);
-      color: #222;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
+        input {
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: 2px solid var(--primary-accent);
+            background: rgba(0,0,0,0.3);
+            color: white;
+            margin-bottom: 12px;
+            text-align: center;
+            width: 200px;
+        }
 
-    button:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-    }
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #000;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
 
-    button:disabled {
-      background: #2a2a2a; 
-      cursor: not-allowed;
-      box-shadow: none;
-      color: #555;
-      transform: none;
-      border: 1px solid #444;
-    }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
 
-    input {
-      padding: 10px;
-      font-size: 18px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      text-align: center;
-    }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
 
-    #status {
-      margin-top: 15px;
-      font-size: 18px;
-      color: #ffcc00;
-      text-shadow: 1px 1px 5px #000;
-      animation: pulse 2s infinite;
-    }
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
 
-    #gameData {
-      font-size: 26px;
-      color: #00ff00;
-      display: none;
-      text-align: left;
-      animation: fadeIn 1s ease-in-out;
-      width: 80%;
-    }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--secondary-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-    #distanceDisplay {
-      margin-bottom: 20px;
-    }
+        /* Game Screen Styles */
+        #gameData {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
 
-    #lanes {
-      display: flex;
-      justify-content: space-around;
-      position: relative;
-      height: 400px;
-      width: 100%;
-    }
+        #distanceDisplay {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--hero-color);
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            margin-bottom: 10px;
+        }
 
-    .lane {
-      position: relative;
-      width: 60px;
-      height: 100%;
-      border-left: 2px solid #fff;
-      border-right: 2px solid #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+        /* Adjusted Lanes - Longer and Closer */
+        #lanesContainer {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Tighter gap between lanes */
+            height: 65vh; /* Much longer lanes */
+            width: auto;
+            position: relative;
+        }
 
-    .hero {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-color: #00ff00;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      transition: top 0.2s;
-    }
+        .lane {
+            position: relative;
+            width: 70px; /* Slightly wider lane for better visual */
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 1px solid var(--lane-color);
+            border-right: 1px solid var(--lane-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    .attackBtnContainer {
-      margin-top: auto;
-      margin-bottom: 10px;
-    }
+        .lane::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 100%;
+            background: repeating-linear-gradient(to bottom, transparent, transparent 20px, var(--lane-color) 20px, var(--lane-color) 40px);
+        }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+        .hero {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--hero-color);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px var(--hero-color);
+            transition: top 0.1s linear;
+            z-index: 10;
+            display: none; /* Hidden by default */
+        }
 
-    @keyframes pulse {
-      0%, 100% { text-shadow: 1px 1px 5px #000; }
-      50% { text-shadow: 1px 1px 15px #ffcc00; }
-    }
-  </style>
+        .attackBtnContainer {
+            position: absolute;
+            bottom: -70px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .attack-btn {
+            width: 100%;
+            padding: 10px 5px;
+            font-size: 12px;
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+        }
+
+        .attack-btn:active {
+            background: var(--primary-accent);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
-  <div id="menu">
-    <img src="TitleImage.webp" alt="Superhero" id="centerImage" onerror="this.style.display='none'">
-    <input type="text" id="codeInput" placeholder="Enter 3-digit code">
-    <button id="startBtn">START</button>
-    <div id="status">Enter code and press START</div>
-  </div>
 
-  <div id="gameData">
-    <div id="distanceDisplay">Distance: 0.0</div>
-    <div id="lanes">
-      <div class="lane" data-lane="1">
-        <div class="hero" id="hero1"></div>
-        <div class="attackBtnContainer"><button data-lane="1">Attack</button></div>
-      </div>
-      <div class="lane" data-lane="2">
-        <div class="hero" id="hero2"></div>
-        <div class="attackBtnContainer"><button data-lane="2">Attack</button></div>
-      </div>
-      <div class="lane" data-lane="3">
-        <div class="hero" id="hero3"></div>
-        <div class="attackBtnContainer"><button data-lane="3">Attack</button></div>
-      </div>
+    <div id="menu">
+        <img src="TitleImage.webp" alt="Superhero" id="centerImage" onerror="this.style.display='none'">
+        <input type="text" id="codeInput" maxlength="3" placeholder="Enter 3-digit code" autocomplete="off">
+        <button id="startBtn">JOIN BATTLE</button>
+        <div id="status">Ready to connect...</div>
     </div>
-  </div>
 
-  <script>
-    const startBtn = document.getElementById('startBtn');
-    const codeInput = document.getElementById('codeInput');
-    const status = document.getElementById('status');
-    const menu = document.getElementById('menu');
-    const gameData = document.getElementById('gameData');
-    const distanceDisplay = document.getElementById('distanceDisplay');
-    const heroes = [document.getElementById('hero1'), document.getElementById('hero2'), document.getElementById('hero3')];
-    const attackButtons = document.querySelectorAll('.attackBtnContainer button');
+    <div id="gameData">
+        <div id="distanceDisplay">Distance: 0.0</div>
+        
+        <div id="lanesContainer">
+            <!-- Lane 1 -->
+            <div class="lane" data-lane="1">
+                <div class="hero" id="hero1"></div>
+                <div class="attackBtnContainer">
+                    <button class="attack-btn" data-lane="1">ATTACK</button>
+                </div>
+            </div>
+            
+            <!-- Lane 2 -->
+            <div class="lane" data-lane="2">
+                <div class="hero" id="hero2"></div>
+                <div class="attackBtnContainer">
+                    <button class="attack-btn" data-lane="2">ATTACK</button>
+                </div>
+            </div>
+            
+            <!-- Lane 3 -->
+            <div class="lane" data-lane="3">
+                <div class="hero" id="hero3"></div>
+                <div class="attackBtnContainer">
+                    <button class="attack-btn" data-lane="3">ATTACK</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Space for buttons offset -->
+        <div style="height: 60px;"></div>
+    </div>
 
-    let ws;
-    let gameStarted = false;
-    let initialDistance = 10; // default, will get from player 1
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const codeInput = document.getElementById('codeInput');
+        const status = document.getElementById('status');
+        const menu = document.getElementById('menu');
+        const gameData = document.getElementById('gameData');
+        const distanceDisplay = document.getElementById('distanceDisplay');
+        
+        const heroes = [
+            document.getElementById('hero1'), 
+            document.getElementById('hero2'), 
+            document.getElementById('hero3')
+        ];
+        const attackButtons = document.querySelectorAll('.attack-btn');
 
-    startBtn.addEventListener('click', () => {
-      const code = codeInput.value.trim();
-      if (!/^[0-9]{3}$/.test(code)) {
-        status.textContent = 'Please enter a valid 3-digit code';
-        return;
-      }
-      status.textContent = 'Connecting...';
-      startBtn.disabled = true;
-      codeInput.disabled = true;
+        let ws;
+        let gameStarted = false;
+        let initialDistance = 1000; // Scaled default
 
-      ws = new WebSocket("wss://kamenherodash-server-production.up.railway.app");
+        startBtn.addEventListener('click', () => {
+            const code = codeInput.value.trim();
+            if (!/^[0-9]{3}$/.test(code)) {
+                status.textContent = 'Invalid code. Use 3 digits.';
+                return;
+            }
+            
+            status.textContent = 'Establishing Link...';
+            startBtn.disabled = true;
+            codeInput.disabled = true;
 
-      ws.addEventListener('open', () => {
-        console.log('Connected to server');
-        ws.send(JSON.stringify({ type: 'join', player: 2 }));
-        ws.send(JSON.stringify({ type: 'code', value: parseInt(code) }));
-      });
+            ws = new WebSocket("wss://kamenherodash-server-production.up.railway.app");
 
-      ws.addEventListener('message', (event) => {
-        const msg = JSON.parse(event.data);
-        console.log('Received:', msg);
+            ws.addEventListener('open', () => {
+                ws.send(JSON.stringify({ type: 'join', player: 2 }));
+                ws.send(JSON.stringify({ type: 'code', value: parseInt(code) }));
+            });
 
-        if (msg.type === 'role') {
-          status.textContent = 'Connected as Player ' + msg.player;
+            ws.addEventListener('message', (event) => {
+                const msg = JSON.parse(event.data);
+                
+                if (msg.type === 'role') {
+                    status.textContent = `Connected (Player ${msg.player})`;
+                }
+
+                if (msg.type === 'start') {
+                    gameStarted = true;
+                    menu.style.display = 'none';
+                    gameData.style.display = 'flex';
+                }
+
+                if (msg.type === 'error') {
+                    status.textContent = msg.message;
+                    resetMenu();
+                    ws.close();
+                }
+
+                if (msg.type === 'distance' && gameStarted) {
+                    const distance = parseFloat(msg.value);
+                    distanceDisplay.textContent = `Distance: ${distance.toFixed(1)}`;
+
+                    if(msg.initialDistance) initialDistance = msg.initialDistance;
+
+                    if(msg.lane !== undefined) {
+                        const activeLaneIndex = msg.lane - 1;
+                        
+                        // Rule: Only display the circle in the current lane
+                        heroes.forEach((hero, index) => {
+                            if (index === activeLaneIndex) {
+                                hero.style.display = 'block';
+                                
+                                // Calculate position based on lane height
+                                const container = hero.parentElement;
+                                const laneHeight = container.clientHeight - hero.clientHeight;
+                                // Invert distance (assuming 0 is goal at bottom)
+                                const progress = Math.min(Math.max(distance / initialDistance, 0), 1);
+                                const topPos = (1 - progress) * laneHeight;
+                                
+                                hero.style.top = `${topPos}px`;
+                            } else {
+                                hero.style.display = 'none';
+                            }
+                        });
+                    }
+                }
+
+                if (msg.type === 'result') {
+                    const resultMsg = msg.outcome === 'victory' ? 'MISSION FAILED' : 'MISSION COMPLETE';
+                    const resultBox = document.createElement('div');
+                    resultBox.style = "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 40px; border: 2px solid white; border-radius: 20px; z-index: 100; text-align: center; font-size: 24px;";
+                    resultBox.innerHTML = `<h1>${resultMsg}</h1><button onclick="location.reload()">RETRY</button>`;
+                    document.body.appendChild(resultBox);
+                }
+            });
+
+            ws.addEventListener('close', () => {
+                if (!gameStarted) {
+                    status.textContent = 'Connection Lost';
+                    resetMenu();
+                }
+            });
+        });
+
+        function resetMenu() {
+            startBtn.disabled = false;
+            codeInput.disabled = false;
         }
 
-        if (msg.type === 'start') {
-          gameStarted = true;
-          menu.style.display = 'none';
-          gameData.style.display = 'block';
+        function disableButtons() {
+            attackButtons.forEach(btn => btn.disabled = true);
+            setTimeout(() => attackButtons.forEach(btn => btn.disabled = false), 800);
         }
 
-        if (msg.type === 'error') {
-          status.textContent = msg.message;
-          startBtn.disabled = false;
-          codeInput.disabled = false;
-          ws.close();
-        }
-
-        if (msg.type === 'distance' && gameStarted) {
-          const distance = parseFloat(msg.value);
-          distanceDisplay.textContent = `Distance: ${distance.toFixed(1)}`;
-
-          if(msg.initialDistance) initialDistance = msg.initialDistance;
-
-          if(msg.lane !== undefined && msg.lane >=1 && msg.lane <=3){
-            const laneIndex = msg.lane - 1;
-            const laneHeight = heroes[laneIndex].parentElement.clientHeight - heroes[laneIndex].clientHeight - 50; // 50px margin for button
-            const topPos = (distance / initialDistance) * laneHeight;
-            heroes[laneIndex].style.top = `${topPos}px`;
-          }
-        }
-
-        if (msg.type === 'result') {
-          alert(msg.outcome === 'victory' ? 'You lose' : 'You won');
-        }
-      });
-
-      ws.addEventListener('close', () => {
-        console.log('Connection closed');
-        if (!gameStarted) {
-          status.textContent = 'Disconnected from server';
-          startBtn.disabled = false;
-          codeInput.disabled = false;
-        }
-      });
-    });
-
-    function disableAllAttackButtonsTemporarily() {
-      attackButtons.forEach(btn => btn.disabled = true);
-      setTimeout(() => attackButtons.forEach(btn => btn.disabled = false), 1000);
-    }
-
-    attackButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const lane = parseInt(btn.getAttribute('data-lane'));
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'attack', lane: lane }));
-          disableAllAttackButtonsTemporarily();
-        }
-      });
-    });
-  </script>
+        attackButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lane = parseInt(btn.getAttribute('data-lane'));
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'attack', lane: lane }));
+                    disableButtons();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
-
