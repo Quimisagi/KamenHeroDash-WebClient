@@ -118,6 +118,14 @@
           }
         }
       }
+
+      if (msg.type === 'result') {
+        if (msg.outcome === 'victory') {
+          alert('You lose');
+        } else if (msg.outcome === 'fail') {
+          alert('You won');
+        }
+      }
     });
 
     ws.addEventListener('close', () => {
@@ -135,7 +143,7 @@
       attackButtons.forEach(btn => btn.disabled = true);
       setTimeout(() => {
         attackButtons.forEach(btn => btn.disabled = false);
-      }, 3000); // 3 seconds freeze
+      }, 3000);
     }
 
     attackButtons.forEach(btn => {
